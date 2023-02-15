@@ -3,6 +3,7 @@
   "displayName": "vscode-view-component-toggle-files",
   "description": "Toggle between files of components of 'view_component'",
   "version": "0.0.1",
+  "publisher": "ozovalihasan",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -10,15 +11,55 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vscode-view-component-toggle-files.helloWorld"
+    "workspaceContains:app/components/**/*_component.rb"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "vscode-view-component-toggle-files.helloWorld",
-        "title": "Hello World"
-      }
+        {
+            "command": "vscode-view-component-toggle-files.rails-test",
+            "title": "Quick Open Selection"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.view-component-ruby",
+            "title": "Open view component ruby file"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-rb-file",
+            "title": "Open .rb file of the component .html.erb or _spec.rb file"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-rspec-file",
+            "title": "Open _spec.rb file of the component .html.erb or .rb file"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-html-erb-file",
+            "title": "Open .html.erb file of the component .rb or _spec.rb file"
+        }
+    ],
+    "keybindings": [
+        {
+            "command": "vscode-view-component-toggle-files.rails-test",
+            "key": "ctrl+p",
+            "mac": "cmd+p"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.view-component-ruby",
+            "key": "ctrl+[",
+            "mac": "cmd+["
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-rb-file",
+            "key": "alt+i"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-rspec-file",
+            "key": "alt+p"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-html-erb-file",
+            "key": "alt+o"
+        }
     ]
   },
   "scripts": {
