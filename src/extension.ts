@@ -1,26 +1,110 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import { commands, Uri, window } from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate() {
+    commands.registerCommand('vscode-view-component-toggle-files.rails-test', () => {
+        const editor = window.activeTextEditor;
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vscode-view-component-toggle-files" is now active!');
+        if (editor) {
+            const cursorPosition = editor.selection.active
+            const current_line_text = editor.document.lineAt(cursorPosition.line).text
+            let current_line_match = current_line_text.match(/render\s*(.*Component)/)
+            let selected_text = ""
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('vscode-view-component-toggle-files.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vscode-view-component-toggle-files!');
-	});
+            if (current_line_match !== null) {
+                selected_text = current_line_match[1].concat(".html.erb")
+            } else {
+                selected_text = editor.document.getText(editor.selection)
+            }
 
-	context.subscriptions.push(disposable);
+            selected_text = selected_text.replace("::", "/");
+
+            if (selected_text.toLowerCase().includes("\n")){
+                selected_text = ""
+            }
+
+            commands.executeCommand(
+                'workbench.action.quickOpen',
+                selected_text
+            );
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.view-component-ruby', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            const cursorPosition = editor.selection.active
+            const current_line_text = editor.document.lineAt(cursorPosition.line).text
+            let current_line_match = current_line_text.match(/render\s*(.*Component)/)
+            let selected_text = ""
+
+            if (current_line_match !== null) {
+                selected_text = current_line_match[1].concat(".rb")
+            } else {
+                selected_text = editor.document.getText(editor.selection)
+            }
+
+            selected_text = selected_text.replace("::", "/");
+
+            if (selected_text.toLowerCase().includes("\n")){
+                selected_text = ""
+            }
+
+            commands.executeCommand(
+                'workbench.action.quickOpen',
+                selected_text
+            );
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-rb-file', () => {
+        const editor = window.activeTextEditor;
+        
+        if (editor) {
+            let active_file_name = editor.document.fileName
+            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/app/")
+
+            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec.rb)/, "_component.rb")
+            
+            commands.executeCommand(
+                'vscode.open',
+                Uri.file(changed_file_name)
+            );
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-rspec-file', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let active_file_name = editor.document.fileName
+            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/spec/")
+
+            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec.rb)/, "_component_spec.rb")
+            
+            commands.executeCommand(
+                'vscode.open',
+                Uri.file(changed_file_name)
+            );
+        }
+    });
+    
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-html-erb-file', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let active_file_name = editor.document.fileName
+            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/app/")
+
+            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, "_component.html.erb")
+            
+            commands.executeCommand(
+                'vscode.open',
+                Uri.file(changed_file_name)
+            );
+        }
+    });
 }
 
-// This method is called when your extension is deactivated
+// this method is called when your extension is deactivated
 export function deactivate() {}
