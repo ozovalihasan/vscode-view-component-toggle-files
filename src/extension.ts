@@ -58,53 +58,34 @@ export function activate() {
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rb-file', () => {
-        const editor = window.activeTextEditor;
-        
-        if (editor) {
-            let active_file_name = editor.document.fileName
-            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/app/")
-
-            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec.rb)/, "_component.rb")
-            
-            commands.executeCommand(
-                'vscode.open',
-                Uri.file(changed_file_name)
-            );
-        }
+        changeToFile("app", ".rb")  
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rspec-file', () => {
-        const editor = window.activeTextEditor;
-
-        if (editor) {
-            let active_file_name = editor.document.fileName
-            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/spec/")
-
-            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec.rb)/, "_component_spec.rb")
-            
-            commands.executeCommand(
-                'vscode.open',
-                Uri.file(changed_file_name)
-            );
-        }
+        changeToFile("spec", "_spec.rb")  
     });
     
     commands.registerCommand('vscode-view-component-toggle-files.change-to-html-erb-file', () => {
-        const editor = window.activeTextEditor;
-
-        if (editor) {
-            let active_file_name = editor.document.fileName
-            active_file_name = active_file_name.replace(/\/(app|spec)\//, "/app/")
-
-            const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, "_component.html.erb")
-            
-            commands.executeCommand(
-                'vscode.open',
-                Uri.file(changed_file_name)
-            );
-        }
+        changeToFile("app", ".html.erb")  
     });
 }
 
+
+const changeToFile = (folder_name: String, file_extension: String) => {
+    
+    const editor = window.activeTextEditor;
+
+    if (editor) {
+        let active_file_name = editor.document.fileName
+        active_file_name = active_file_name.replace(/\/(app|spec)\//, `/${folder_name}/`)
+
+        const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, `_component${file_extension}`)
+        
+        commands.executeCommand(
+            'vscode.open',
+            Uri.file(changed_file_name)
+        );
+    }
+}
 // this method is called when your extension is deactivated
 export function deactivate() {}
