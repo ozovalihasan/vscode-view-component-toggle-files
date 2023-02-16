@@ -10,6 +10,13 @@
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ozovalihasan/vscode-view-component-toggle-files.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ozovalihasan/vscode-view-component-toggle-files/issues"
+  },
   "activationEvents": [
     "workspaceContains:app/components/**/*_component.rb"
   ],
@@ -17,12 +24,12 @@
   "contributes": {
     "commands": [
         {
-            "command": "vscode-view-component-toggle-files.rails-test",
-            "title": "Quick Open Selection"
+            "command": "vscode-view-component-toggle-files.quick-open-html-erb",
+            "title": "Quick open html.erb file of the selected component"
         },
         {
-            "command": "vscode-view-component-toggle-files.view-component-ruby",
-            "title": "Open view component ruby file"
+            "command": "vscode-view-component-toggle-files.quick-open-ruby",
+            "title": "Quick open .rb file of the selected component"
         },
         {
             "command": "vscode-view-component-toggle-files.change-to-rb-file",
@@ -39,12 +46,12 @@
     ],
     "keybindings": [
         {
-            "command": "vscode-view-component-toggle-files.rails-test",
+            "command": "vscode-view-component-toggle-files.quick-open-html-erb",
             "key": "ctrl+p",
             "mac": "cmd+p"
         },
         {
-            "command": "vscode-view-component-toggle-files.view-component-ruby",
+            "command": "vscode-view-component-toggle-files.quick-open-ruby",
             "key": "ctrl+[",
             "mac": "cmd+["
         },

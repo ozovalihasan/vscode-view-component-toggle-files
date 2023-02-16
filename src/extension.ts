@@ -1,7 +1,7 @@
 import { commands, Uri, window } from 'vscode';
 
 export function activate() {
-    commands.registerCommand('vscode-view-component-toggle-files.rails-test', () => {
+    commands.registerCommand('vscode-view-component-toggle-files.quick-open-html-erb', () => {
         const editor = window.activeTextEditor;
 
         if (editor) {
@@ -29,7 +29,7 @@ export function activate() {
         }
     });
 
-    commands.registerCommand('vscode-view-component-toggle-files.view-component-ruby', () => {
+    commands.registerCommand('vscode-view-component-toggle-files.quick-open-ruby', () => {
         const editor = window.activeTextEditor;
 
         if (editor) {
