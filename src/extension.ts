@@ -6,25 +6,25 @@ export function activate() {
 
         if (editor) {
             const cursorPosition = editor.selection.active
-            const current_line_text = editor.document.lineAt(cursorPosition.line).text
-            let current_line_match = current_line_text.match(/render\s*(.*Component)/)
-            let selected_text = ""
+            const currentLineText = editor.document.lineAt(cursorPosition.line).text
+            let currentLineMatch = currentLineText.match(/render\s*(.*Component)/)
+            let selectedText = ""
 
-            if (current_line_match !== null) {
-                selected_text = current_line_match[1].concat(".html.erb")
+            if (currentLineMatch !== null) {
+                selectedText = currentLineMatch[1].concat(".html.erb")
             } else {
-                selected_text = editor.document.getText(editor.selection)
+                selectedText = editor.document.getText(editor.selection)
             }
 
-            selected_text = selected_text.replace("::", "/");
+            selectedText = selectedText.replace("::", "/");
 
-            if (selected_text.toLowerCase().includes("\n")){
-                selected_text = ""
+            if (selectedText.toLowerCase().includes("\n")){
+                selectedText = ""
             }
 
             commands.executeCommand(
                 'workbench.action.quickOpen',
-                selected_text
+                selectedText
             );
         }
     });
@@ -34,25 +34,49 @@ export function activate() {
 
         if (editor) {
             const cursorPosition = editor.selection.active
-            const current_line_text = editor.document.lineAt(cursorPosition.line).text
-            let current_line_match = current_line_text.match(/render\s*(.*Component)/)
-            let selected_text = ""
+            const currentLineText = editor.document.lineAt(cursorPosition.line).text
+            let currentLineMatch = currentLineText.match(/render\s*(.*Component)/)
+            let selectedText = ""
 
-            if (current_line_match !== null) {
-                selected_text = current_line_match[1].concat(".rb")
+            if (currentLineMatch !== null) {
+                selectedText = currentLineMatch[1].concat(".rb")
             } else {
-                selected_text = editor.document.getText(editor.selection)
+                selectedText = editor.document.getText(editor.selection)
             }
 
-            selected_text = selected_text.replace("::", "/");
+            selectedText = selectedText.replace("::", "/");
 
-            if (selected_text.toLowerCase().includes("\n")){
-                selected_text = ""
+            if (selectedText.toLowerCase().includes("\n")){
+                selectedText = ""
             }
 
             commands.executeCommand(
                 'workbench.action.quickOpen',
-                selected_text
+                selectedText
+            );
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.search-files-including-component', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let activeFileName = editor.document.fileName
+            activeFileName = activeFileName.replace(/.*\/(app|spec)\/components\//, "")
+            activeFileName = activeFileName.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, "_component")
+
+            let changedFileName = activeFileName.split("/").map((part) => {
+                                                    return part.split("_")
+                                                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                                        .join("")
+                                                }).join("::")
+            
+            commands.executeCommand(
+                'workbench.action.findInFiles',
+                {   
+                    query: changedFileName,
+                    triggerSearch: true
+                }
             );
         }
     });
