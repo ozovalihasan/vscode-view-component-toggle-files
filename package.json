@@ -64,6 +64,10 @@
             "key": "alt+k"
         },
         {
+            "command": "vscode-view-component-toggle-files.change-to-snap-file",
+            "key": "alt+["
+        },
+        {
             "command": "vscode-view-component-toggle-files.change-to-rb-file",
             "key": "alt+i"
         },

@@ -56,7 +56,7 @@ export function activate() {
             );
         }
     });
-
+    
     commands.registerCommand('vscode-view-component-toggle-files.search-files-including-component', () => {
         const editor = window.activeTextEditor;
 
@@ -77,6 +77,33 @@ export function activate() {
                     query: changedFileName,
                     triggerSearch: true
                 }
+            );
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-snap-file', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            const cursorPosition = editor.selection.active
+            const currentLineText = editor.document.lineAt(cursorPosition.line).text
+            let currentLineMatch = currentLineText.match(/match_snapshot\(\s*['|"](.*)['|"]\s*\)/)
+            
+            let activeFileName = editor.document.fileName
+            let activeFolder = activeFileName.match(/(.*\/)[^\/]*$/)
+            
+            
+            let selectedSnapshot = ""
+            if (currentLineMatch !== null && activeFolder !== null ) {
+                selectedSnapshot = activeFolder[1].concat("__snapshots__/").concat(currentLineMatch[1].concat(".snap"))
+            } else {
+                window.setStatusBarMessage('A suitable snapshot file couldn"t be found', 1000);
+                return
+            }
+
+            commands.executeCommand(
+                'vscode.open',
+                Uri.file(selectedSnapshot)
             );
         }
     });
