@@ -101,6 +101,10 @@ export function activate() {
             } else {
                 const cursorPosition = editor.selection.active
                 const currentLineText = editor.document.lineAt(cursorPosition.line).text
+                if (!currentLineText.match("match_custom_snapshot")) {
+                    window.setStatusBarMessage('Pleasea select a line containing "match_custom_snapshot"', 1000);
+                    return
+                }
                 let currentLineMatch = currentLineText.match(/match_custom_snapshot\(\s*['|"](.*)['|"]\s*\)/)
                 let snapshotName = (currentLineMatch && currentLineMatch[1]) || "default"
                 
