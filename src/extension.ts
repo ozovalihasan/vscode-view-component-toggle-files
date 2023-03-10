@@ -16,7 +16,7 @@ export function activate() {
                 selectedText = editor.document.getText(editor.selection)
             }
 
-            selectedText = selectedText.replace("::", "/");
+            selectedText = selectedText.replace(/::/g, "/");
 
             if (selectedText.toLowerCase().includes("\n")){
                 selectedText = ""
@@ -25,6 +25,10 @@ export function activate() {
             commands.executeCommand(
                 'workbench.action.quickOpen',
                 selectedText
+            );
+        } else {
+            commands.executeCommand(
+                'workbench.action.quickOpen'
             );
         }
     });
@@ -63,7 +67,7 @@ export function activate() {
         if (editor) {
             let activeFileName = editor.document.fileName
             activeFileName = activeFileName.replace(/.*\/(app|spec)\/components\//, "")
-            activeFileName = activeFileName.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, "_component")
+            activeFileName = activeFileName.replace(/component(\.html\.erb|\.rb|_spec\.rb)/, "component")
 
             let changedFileName = activeFileName.split("/").map((part) => {
                                                     return part.split("_")
@@ -155,7 +159,7 @@ const changeToFile = (folder_name: String, file_extension: String) => {
         let active_file_name = editor.document.fileName
         active_file_name = active_file_name.replace(/\/(app|spec)\//, `/${folder_name}/`)
 
-        const changed_file_name = active_file_name.replace(/_component(\.html\.erb|\.rb|_spec\.rb)/, `_component${file_extension}`)
+        const changed_file_name = active_file_name.replace(/\/component(\.html\.erb|\.rb|_spec\.rb)/, `\/component${file_extension}`)
         
         commands.executeCommand(
             'vscode.open',
