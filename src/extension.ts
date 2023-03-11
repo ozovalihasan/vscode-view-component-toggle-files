@@ -102,7 +102,7 @@ export function activate() {
                     Uri.file(active_file_name)
                 );
                 
-            } else if( active_file_name.match(/spec\/components\/.*_spec\.rb/) ) {
+            } else if ( active_file_name.match(/spec\/components\/.*_spec\.rb/) ) {
                 const cursorPosition = editor.selection.active
                 const currentLineText = editor.document.lineAt(cursorPosition.line).text
                 if (!currentLineText.match("match_custom_snapshot")) {
@@ -142,11 +142,46 @@ export function activate() {
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rspec-file', () => {
-        changeToFile("spec", "_spec.rb")  
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let active_file_name = editor.document.fileName
+
+            if ( active_file_name.match(/(app|spec)\/components/) ) {
+                
+                changeToFile("spec", "_spec.rb")  
+                
+            } else if ( active_file_name.match(/(app|spec)\/views/) ) {
+                let original_file_name = active_file_name.replace("app/views", "spec/views").concat("_spec.rb", "")
+                
+                commands.executeCommand(
+                    'vscode.open',
+                    Uri.file(original_file_name)
+                );
+            }
+        }
+        
     });
     
     commands.registerCommand('vscode-view-component-toggle-files.change-to-html-erb-file', () => {
-        changeToFile("app", ".html.erb")  
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let active_file_name = editor.document.fileName
+
+            if ( active_file_name.match(/(app|spec)\/components/) ) {
+                
+                changeToFile("app", ".html.erb")  
+                
+            } else if ( active_file_name.match(/(app|spec)\/views/) ) {
+                let original_file_name = active_file_name.replace("spec/views", "app/views").replace("_spec.rb", "")
+                
+                commands.executeCommand(
+                    'vscode.open',
+                    Uri.file(original_file_name)
+                );
+            }
+        }
     });
 }
 
