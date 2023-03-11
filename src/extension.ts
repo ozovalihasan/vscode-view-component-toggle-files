@@ -1,5 +1,11 @@
 import { commands, Uri, window } from 'vscode';
 
+const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
+  
+const componentToFileName = (componentName: string) => {
+return componentName.replace("::Component", "").split("::").map((part: string) => toSnakeCase(part)).join("/")
+};
+
 export function activate() {
     commands.registerCommand('vscode-view-component-toggle-files.quick-open-html-erb', () => {
         const editor = window.activeTextEditor;
@@ -67,18 +73,12 @@ export function activate() {
         if (editor) {
             let activeFileName = editor.document.fileName
             activeFileName = activeFileName.replace(/.*\/(app|spec)\/components\//, "")
-            activeFileName = activeFileName.replace(/component(\.html\.erb|\.rb|_spec\.rb)/, "component")
+            activeFileName = activeFileName.replace(/\/component(\.html\.erb|\.rb|_spec\.rb)/, "")
 
-            let changedFileName = activeFileName.split("/").map((part) => {
-                                                    return part.split("_")
-                                                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                                        .join("")
-                                                }).join("::")
-            
             commands.executeCommand(
                 'workbench.action.findInFiles',
                 {   
-                    query: changedFileName,
+                    query: activeFileName,
                     triggerSearch: true
                 }
             );
@@ -102,7 +102,7 @@ export function activate() {
                     Uri.file(active_file_name)
                 );
                 
-            } else {
+            } else if( active_file_name.match(/spec\/components\/.*_spec\.rb/) ) {
                 const cursorPosition = editor.selection.active
                 const currentLineText = editor.document.lineAt(cursorPosition.line).text
                 if (!currentLineText.match("match_custom_snapshot")) {
