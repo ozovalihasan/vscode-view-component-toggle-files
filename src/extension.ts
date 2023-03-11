@@ -151,13 +151,17 @@ export function activate() {
                 
                 changeToFile("spec", "_spec.rb")  
                 
-            } else if ( active_file_name.match(/(app|spec)\/views/) ) {
+            } else if ( active_file_name.match(/app\/views/) ) {
+
+                
                 let original_file_name = active_file_name.replace("app/views", "spec/views").concat("_spec.rb", "")
                 
                 commands.executeCommand(
                     'vscode.open',
                     Uri.file(original_file_name)
                 );
+            } else if ( active_file_name.match(/spec\/views/) ) {
+                window.setStatusBarMessage('You are checking a test file', 1000);
             }
         }
         
@@ -173,13 +177,15 @@ export function activate() {
                 
                 changeToFile("app", ".html.erb")  
                 
-            } else if ( active_file_name.match(/(app|spec)\/views/) ) {
+            } else if ( active_file_name.match(/spec\/views/) ) {
                 let original_file_name = active_file_name.replace("spec/views", "app/views").replace("_spec.rb", "")
                 
                 commands.executeCommand(
                     'vscode.open',
                     Uri.file(original_file_name)
                 );
+            } else if ( active_file_name.match(/app\/views/) ) {
+                window.setStatusBarMessage('You are checking a view', 1000);
             }
         }
     });
