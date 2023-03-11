@@ -138,7 +138,7 @@ export function activate() {
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rb-file', () => {
-        changeToFile("app", ".rb")  
+        changeToFileForComponents("app", ".rb")  
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rspec-file', () => {
@@ -147,21 +147,21 @@ export function activate() {
         if (editor) {
             let active_file_name = editor.document.fileName
 
-            if ( active_file_name.match(/(app|spec)\/components/) ) {
+            if ( isComponentFile(active_file_name) ) {
                 
-                changeToFile("spec", "_spec.rb")  
+                changeToFileForComponents("spec", "_spec.rb")  
                 
-            } else if ( active_file_name.match(/app\/views/) ) {
+            } else if ( isViewFile(active_file_name) ) {
 
                 
-                let original_file_name = active_file_name.replace("app/views", "spec/views").concat("_spec.rb", "")
+                let original_file_name = active_file_name.replace(/(spec|app)\/views/, "spec/views")
+                                                        .replace("_spec.rb", "")
+                                                        .concat("_spec.rb", "")
                 
                 commands.executeCommand(
                     'vscode.open',
                     Uri.file(original_file_name)
                 );
-            } else if ( active_file_name.match(/spec\/views/) ) {
-                window.setStatusBarMessage('You are checking a test file', 1000);
             }
         }
         
@@ -173,26 +173,27 @@ export function activate() {
         if (editor) {
             let active_file_name = editor.document.fileName
 
-            if ( active_file_name.match(/(app|spec)\/components/) ) {
+            if ( isComponentFile(active_file_name) ) {
                 
-                changeToFile("app", ".html.erb")  
+                changeToFileForComponents("app", ".html.erb")  
                 
-            } else if ( active_file_name.match(/spec\/views/) ) {
-                let original_file_name = active_file_name.replace("spec/views", "app/views").replace("_spec.rb", "")
+            } else if ( isViewFile(active_file_name) ) {
+                let original_file_name = active_file_name.replace(/(spec|app)\/views/, "app/views").replace("_spec.rb", "")
                 
                 commands.executeCommand(
                     'vscode.open',
                     Uri.file(original_file_name)
                 );
-            } else if ( active_file_name.match(/app\/views/) ) {
-                window.setStatusBarMessage('You are checking a view', 1000);
             }
         }
     });
 }
 
+const isComponentFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/components/));
 
-const changeToFile = (folder_name: String, file_extension: String) => {
+const isViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/views/));
+
+const changeToFileForComponents = (folder_name: String, file_extension: String) => {
     
     const editor = window.activeTextEditor;
 
