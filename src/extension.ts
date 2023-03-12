@@ -3,7 +3,7 @@ import { commands, Uri, window, Range, Selection, Position, workspace } from 'vs
 const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
   
 const componentToFileName = (componentName: string) => {
-return componentName.replace("::Component", "").split("::").map((part: string) => toSnakeCase(part)).join("/")
+    return componentName.replace("::Component", "").split("::").map((part: string) => toSnakeCase(part)).join("/")
 };
 
 export function activate() {
@@ -245,11 +245,64 @@ export function activate() {
                 changeToFileForComponents("app", ".html.erb")  
                 
             } else if ( isViewFile(activeFileName) ) {
-                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "app/views").replace("_spec.rb", "")
+                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "app/views")
+                                                        .replace("_spec.rb", "")
+                                                        .replace(".html.erb", "")
+                                                        .replace(".turbo_stream.erb", "")
                 
                 commands.executeCommand(
                     'vscode.open',
-                    Uri.file(original_file_name)
+                    Uri.file(original_file_name + ".html.erb")
+                );
+                
+            } else if ( isControllerFile(activeFileName) ) {
+                let original_file_name = activeFileName.replace(/app\/controllers/, "app/views").replace("_controller.rb", "")
+
+                const cursorPosition = editor.selection.active; 
+                const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
+                
+                let action = fileTextToCursor.match(/def \w+/g)?.slice(-1)[0]
+   
+                commands.executeCommand(
+                    'vscode.open',
+                    Uri.file(original_file_name + "/" + action + ".html.erb")
+                );
+            }
+        }
+    });
+
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-turbo-stream-erb-file', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let activeFileName = editor.document.fileName
+
+            if ( isComponentFile(activeFileName) ) {
+                
+                window.setStatusBarMessage("The file is a component file. It doesn't have a turbo_stream file", 1000);
+                
+            } else if ( isViewFile(activeFileName) ) {
+                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "app/views")
+                                                        .replace("_spec.rb", "")
+                                                        .replace(".html.erb", "")
+                                                        .replace(".turbo_stream.erb", "")
+                
+                commands.executeCommand(
+                    'vscode.open',
+                    Uri.file(original_file_name + ".turbo_stream.erb")
+                );
+                
+            } else if ( isControllerFile(activeFileName) ) {
+                let original_file_name = activeFileName.replace(/app\/controllers/, "app/views").replace("_controller.rb", "")
+
+                const cursorPosition = editor.selection.active; 
+                const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
+                
+                let action = fileTextToCursor.match(/def \w+/g)?.slice(-1)[0].replace("def ", "")
+   
+                commands.executeCommand(
+                    'vscode.open',
+                    Uri.file(original_file_name + "/" + action + ".turbo_stream.erb")
                 );
             }
         }
@@ -260,7 +313,11 @@ export function activate() {
 
 const isComponentFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/components/));
 
-const isViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/views/));
+const isHTMLViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/views\/.*\.html\.erb/));
+
+const isTurboStreamViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/views\/.*\.turbo_stream\.erb/));
+
+const isViewFile = (fileName: string) => (isHTMLViewFile(fileName) || isTurboStreamViewFile(fileName))
 
 const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/controllers/));
 
