@@ -147,22 +147,18 @@ export function activate() {
 
                 changeToFileForComponents("app", ".rb")
                 
-            } else if ( isViewFile(activeFileName) ) {
-                let [_, controllersFolder, controllerPath, action] = activeFileName.match(/(.*app)\/views\/(.*)\/(.*)\.(turbo_stream|html)\.erb/) || []
-                window.setStatusBarMessage(action, 1000);    
-                if (!controllerPath) {
-                    window.setStatusBarMessage('There is no controller.', 1000);    
-                    return
-                }
+            } else if ( isOriginalRailsFile(activeFileName) ) {
+                
+                let [controller, action] = findActionAndController()
 
-                controllerPath = controllersFolder + "/controllers/" + controllerPath + "_controller.rb"
+                const workspaceFolder = getWorkspaceFolder()
 
-                openDocument(controllerPath, () => moveCursorToAction(action))
+                openDocument(workspaceFolder + "app/controllers/" + controller + "_controller.rb", () => moveCursorToAction(action))
             }
         }
     });
 
-    async function openDocument(filePath: string, callback: Function) {
+    const openDocument = async (filePath: string, callback: Function) => {
         const document = await workspace.openTextDocument(filePath);
         await window.showTextDocument(document);
         callback()
@@ -218,17 +214,20 @@ export function activate() {
                 
                 changeToFileForComponents("spec", "_spec.rb")  
                 
-            } else if ( isViewFile(activeFileName) ) {
+            } else if ( isOriginalRailsFile(activeFileName) ) {
 
-                
-                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "spec/views")
-                                                        .replace("_spec.rb", "")
-                                                        .concat("_spec.rb", "")
-                
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(original_file_name)
-                );
+                if (isHTMLViewFile(activeFileName) || isControllerFile(activeFileName)) {
+                    
+                    changeToFileForRailsFiles("spec/views", ".html.erb_spec.rb")    
+                    
+                } else if (isTurboStreamViewFile(activeFileName)) {
+                    
+                    changeToFileForRailsFiles("spec/views", ".turbo_stream.erb_spec.rb")    
+                    
+                } else {
+                    window.setStatusBarMessage("Are you sure that it is a view file?", 1000);
+                    return;
+                }
             }
         }
         
@@ -242,74 +241,93 @@ export function activate() {
 
             if ( isComponentFile(activeFileName) ) {
                 
-                changeToFileForComponents("app", ".html.erb")  
+                changeToFileForComponents("app/views/", ".html.erb")  
                 
-            } else if ( isViewFile(activeFileName) ) {
-                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "app/views")
-                                                        .replace("_spec.rb", "")
-                                                        .replace(".html.erb", "")
-                                                        .replace(".turbo_stream.erb", "")
-                
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(original_file_name + ".html.erb")
-                );
-                
-            } else if ( isControllerFile(activeFileName) ) {
-                let original_file_name = activeFileName.replace(/app\/controllers/, "app/views").replace("_controller.rb", "")
-
-                const cursorPosition = editor.selection.active; 
-                const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
-                
-                let action = fileTextToCursor.match(/def \w+/g)?.slice(-1)[0]
-   
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(original_file_name + "/" + action + ".html.erb")
-                );
+            } else if ( isOriginalRailsFile(activeFileName) ) {
+                changeToFileForRailsFiles("app/views", ".html.erb")
             }
         }
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-turbo-stream-erb-file', () => {
-        const editor = window.activeTextEditor;
-
-        if (editor) {
-            let activeFileName = editor.document.fileName
-
-            if ( isComponentFile(activeFileName) ) {
-                
-                window.setStatusBarMessage("The file is a component file. It doesn't have a turbo_stream file", 1000);
-                
-            } else if ( isViewFile(activeFileName) ) {
-                let original_file_name = activeFileName.replace(/(spec|app)\/views/, "app/views")
-                                                        .replace("_spec.rb", "")
-                                                        .replace(".html.erb", "")
-                                                        .replace(".turbo_stream.erb", "")
-                
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(original_file_name + ".turbo_stream.erb")
-                );
-                
-            } else if ( isControllerFile(activeFileName) ) {
-                let original_file_name = activeFileName.replace(/app\/controllers/, "app/views").replace("_controller.rb", "")
-
-                const cursorPosition = editor.selection.active; 
-                const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
-                
-                let action = fileTextToCursor.match(/def \w+/g)?.slice(-1)[0].replace("def ", "")
-   
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(original_file_name + "/" + action + ".turbo_stream.erb")
-                );
-            }
-        }
+        changeToFileForRailsFiles("app/views", ".turbo_stream.erb")
     });
 }
 
+const getWorkspaceFolder = () => {
+    const editor = window.activeTextEditor;
 
+    if (editor) {
+        let activeFileName = editor.document.fileName
+        const workspaceFolder = activeFileName.match(/(.*\/)(app|spec)\/(views|controllers)/)?.slice(1)[0] || ""
+
+        if (workspaceFolder === "") {
+            window.setStatusBarMessage("There is no a workspace folder", 1000);
+            return;
+        }
+
+        return workspaceFolder
+    } else {
+        window.setStatusBarMessage('There is no an editor to select.', 1000);    
+    }
+}
+
+const changeToFileForRailsFiles = (folderName: string, fileExtension: string) => {
+    let [controller, action] = findActionAndController()
+
+    if (controller !== "") {
+        const workspaceFolder = getWorkspaceFolder()
+        
+        commands.executeCommand(
+            'vscode.open',
+            Uri.file(workspaceFolder + folderName + "/" + controller + "/" + action + fileExtension)
+        );
+
+    }
+    
+}
+
+
+const findActionAndController = () => {
+    const editor = window.activeTextEditor;
+
+    if (editor) {
+        let activeFileName = editor.document.fileName
+
+        let folderOfController = activeFileName.replace(/(spec|app)\/(views|controllers)/, "app/views")
+                                                    .replace(".turbo_stream.erb_spec.rb", "")
+                                                    .replace(".html.erb_spec.rb", "")
+                                                    .replace(".turbo_stream.erb", "")
+                                                    .replace(".html.erb", "")
+                                                    .replace("_controller.rb", "")
+                                                    .replace(".rb", "")
+
+        let action = ""
+        let controller = ""
+
+        if ( isControllerFile(activeFileName) ) {
+            const cursorPosition = editor.selection.active; 
+            const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
+            
+            [ action ] = fileTextToCursor.match(/def\s*\w+/g)?.slice(-1) || [ "" ];
+            action = action.replace(/def\s*/, "");
+            
+            [ controller ] = folderOfController.match(/app\/views\/(.*)$/)?.slice(-1) || [ "" ];
+            
+        } else if ( isViewFile(activeFileName) ) {
+            [controller, action] = folderOfController.match(/app\/views\/(.*)\/(\w+)$/)?.slice(-2) || [ "", "" ]
+        } else {
+            window.setStatusBarMessage('There is no an action or a controller.', 1000);    
+            return ["", ""]
+        }
+        
+        return [controller, action]
+    } else {
+        window.setStatusBarMessage('There is no an editor to select.', 1000);    
+        return ["", ""]
+    }
+    
+}
 
 const isComponentFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/components/));
 
@@ -320,6 +338,8 @@ const isTurboStreamViewFile = (fileName: string) => Boolean(fileName.match(/(app
 const isViewFile = (fileName: string) => (isHTMLViewFile(fileName) || isTurboStreamViewFile(fileName))
 
 const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/controllers/));
+
+const isOriginalRailsFile = (fileName: string) => (isViewFile(fileName) || isControllerFile(fileName))
 
 const changeToFileForComponents = (folder_name: String, file_extension: String) => {
     
