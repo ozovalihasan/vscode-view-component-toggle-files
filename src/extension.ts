@@ -110,52 +110,6 @@ export function activate() {
         }
     });
 
-    const openDocument = async (filePath: string, callback: Function) => {
-        const document = await workspace.openTextDocument(filePath);
-        await window.showTextDocument(document);
-        callback()
-    }
-
-    const  moveCursorToAction = (action: string) => {
-        const editor = window.activeTextEditor;
-        if (!editor) {
-          window.showErrorMessage('No active text editor');
-          return;
-        }
-
-        if (checkingAction(action)) { return }
-
-        const actionDefinition = `def ${action}`
-        
-        const document = editor.document;
-        const wordPosition = document.positionAt(document.getText().indexOf(actionDefinition));
-        const newPosition = new Position(wordPosition.line, wordPosition.character + actionDefinition.length);
-        
-        editor.edit(editBuilder => {
-          editBuilder.insert(newPosition, '');
-        }).then(() => {
-          editor.selection = new Selection(newPosition, newPosition);
-        });
-    }
-
-    const checkingAction = (action: string) => {
-        const editor = window.activeTextEditor;
-        
-        if (!editor) {
-            window.showErrorMessage('No active text editor');
-            return;
-        }
-
-        const cursorPosition = editor.selection.active; 
-        const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
-
-        if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action + "\\s*\\n(.*\\n)*" + "\\1end"))) { return false}
-        if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action))) { return true}
-        
-        return false
-    
-    }
-
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rspec-file', () => {
         const editor = window.activeTextEditor;
 
@@ -208,6 +162,52 @@ export function activate() {
             }
         }
     });
+}
+
+const openDocument = async (filePath: string, callback: Function) => {
+    const document = await workspace.openTextDocument(filePath);
+    await window.showTextDocument(document);
+    callback()
+}
+
+const  moveCursorToAction = (action: string) => {
+    const editor = window.activeTextEditor;
+    if (!editor) {
+      window.showErrorMessage('No active text editor');
+      return;
+    }
+
+    if (checkingAction(action)) { return }
+
+    const actionDefinition = `def ${action}`
+    
+    const document = editor.document;
+    const wordPosition = document.positionAt(document.getText().indexOf(actionDefinition));
+    const newPosition = new Position(wordPosition.line, wordPosition.character + actionDefinition.length);
+    
+    editor.edit(editBuilder => {
+      editBuilder.insert(newPosition, '');
+    }).then(() => {
+      editor.selection = new Selection(newPosition, newPosition);
+    });
+}
+
+const checkingAction = (action: string) => {
+    const editor = window.activeTextEditor;
+    
+    if (!editor) {
+        window.showErrorMessage('No active text editor');
+        return;
+    }
+
+    const cursorPosition = editor.selection.active; 
+    const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
+
+    if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action + "\\s*\\n(.*\\n)*" + "\\1end"))) { return false}
+    if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action))) { return true}
+    
+    return false
+
 }
 
 const getWorkspaceFolder = () => {
