@@ -1,11 +1,5 @@
 import { commands, Uri, window, Range, Selection, Position, workspace, FileType, TextEditor } from 'vscode';
 
-const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
-  
-const componentToFileName = (componentName: string) => {
-    return componentName.replace("::Component", "").split("::").map((part: string) => toSnakeCase(part)).join("/")
-};
-
 export function activate() {
     commands.registerCommand('vscode-view-component-toggle-files.quick-open-html-erb', () => {
         const editor = window.activeTextEditor;
@@ -391,5 +385,12 @@ const changeToFileForComponents = (folder_name: String, file_extension: String) 
         );
     }
 }
+
+const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
+  
+const componentToFileName = (componentName: string) => {
+    return componentName.replace("::Component", "").split("::").map((part: string) => toSnakeCase(part)).join("/")
+};
+
 // this method is called when your extension is deactivated
 export function deactivate() {}
