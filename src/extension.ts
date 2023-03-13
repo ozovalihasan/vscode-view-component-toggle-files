@@ -242,6 +242,20 @@ export function activate() {
             }
         }
     });
+
+    commands.registerCommand('vscode-view-component-toggle-files.change-to-turbo-stream-erb-file', () => {
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let activeFileName = editor.document.fileName
+
+            if ( isOriginalRailsFile(activeFileName) ) {
+                changeToFileForRailsFiles("app/views", ".turbo_stream.erb")
+            } else {
+                window.setStatusBarMessage("There is no any file with 'turbo_stream' to open.", 1000);
+            }
+        }
+    });
 }
 
 const getWorkspaceFolder = () => {
@@ -265,6 +279,13 @@ const getWorkspaceFolder = () => {
 const changeToFileForRailsFiles = async (folderName: string, fileExtension: string) => {
     let [controller, action] = findActionAndController()
     
+    let activeFileName = ""
+    const editor = window.activeTextEditor;
+
+    if (editor) {
+        activeFileName = editor.document.fileName
+    }
+    
     if (controller !== "") {
         const workspaceFolder = getWorkspaceFolder()
 
@@ -272,9 +293,14 @@ const changeToFileForRailsFiles = async (folderName: string, fileExtension: stri
         
         if (fileExtension.includes("html.erb")) {
             const isFileExist = await checkFileExists(fullPath)
+            
             if (!isFileExist) {
                 fullPath = fullPath.replace("html.erb", "turbo_stream.erb")
             }
+        }
+
+        if (activeFileName.includes("turbo_stream.erb") && isTestFile(fullPath)){
+            fullPath = fullPath.replace("html.erb", "turbo_stream.erb")
         }
 
         const isFileExist = await checkFileExists(fullPath)
@@ -351,6 +377,8 @@ const isTurboStreamViewFile = (fileName: string) => Boolean(fileName.match(/(app
 const isViewFile = (fileName: string) => (isHTMLViewFile(fileName) || isTurboStreamViewFile(fileName))
 
 const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/controllers/));
+
+const isTestFile = (fileName: string) => Boolean(fileName.match(/_spec.rb/));
 
 const isOriginalRailsFile = (fileName: string) => (isViewFile(fileName) || isControllerFile(fileName))
 

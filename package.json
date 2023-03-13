@@ -78,6 +78,10 @@
         {
             "command": "vscode-view-component-toggle-files.change-to-html-erb-file",
             "key": "alt+o"
+        },
+        {
+            "command": "vscode-view-component-toggle-files.change-to-turbo-stream-erb-file",
+            "key": "alt+u"
         }
     ]
   },
