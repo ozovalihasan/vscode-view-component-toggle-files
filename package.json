@@ -46,10 +46,6 @@
         {
             "command": "vscode-view-component-toggle-files.change-to-html-erb-file",
             "title": "Open .html.erb file of the component .turbo_stream, .rb or _spec.rb file"
-        },
-        {
-            "command": "vscode-view-component-toggle-files.change-to-turbo-stream-erb-file",
-            "title": "Open .turbo_stream.erb file of the component .turbo_stream, .rb or _spec.rb file"
         }
     ],
     "keybindings": [
@@ -82,10 +78,6 @@
         {
             "command": "vscode-view-component-toggle-files.change-to-html-erb-file",
             "key": "alt+o"
-        },
-        {
-            "command": "vscode-view-component-toggle-files.change-to-turbo-stream-erb-file",
-            "key": "alt+u"
         }
     ]
   },

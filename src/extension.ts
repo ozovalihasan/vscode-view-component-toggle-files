@@ -1,4 +1,4 @@
-import { commands, Uri, window, Range, Selection, Position, workspace } from 'vscode';
+import { commands, Uri, window, Range, Selection, Position, workspace, FileType } from 'vscode';
 
 const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
   
@@ -216,18 +216,12 @@ export function activate() {
                 
             } else if ( isOriginalRailsFile(activeFileName) ) {
 
-                if (isHTMLViewFile(activeFileName) || isControllerFile(activeFileName)) {
-                    
-                    changeToFileForRailsFiles("spec/views", ".html.erb_spec.rb")    
-                    
-                } else if (isTurboStreamViewFile(activeFileName)) {
-                    
-                    changeToFileForRailsFiles("spec/views", ".turbo_stream.erb_spec.rb")    
-                    
-                } else {
-                    window.setStatusBarMessage("Are you sure that it is a view file?", 1000);
-                    return;
-                }
+                changeToFileForRailsFiles("spec/views", ".html.erb_spec.rb")    
+                
+            } else {
+                
+                window.setStatusBarMessage("Your file is not suitable to toggle", 1000);
+
             }
         }
         
@@ -247,10 +241,6 @@ export function activate() {
                 changeToFileForRailsFiles("app/views", ".html.erb")
             }
         }
-    });
-
-    commands.registerCommand('vscode-view-component-toggle-files.change-to-turbo-stream-erb-file', () => {
-        changeToFileForRailsFiles("app/views", ".turbo_stream.erb")
     });
 }
 
@@ -272,17 +262,30 @@ const getWorkspaceFolder = () => {
     }
 }
 
-const changeToFileForRailsFiles = (folderName: string, fileExtension: string) => {
+const changeToFileForRailsFiles = async (folderName: string, fileExtension: string) => {
     let [controller, action] = findActionAndController()
-
+    
     if (controller !== "") {
         const workspaceFolder = getWorkspaceFolder()
-        
-        commands.executeCommand(
-            'vscode.open',
-            Uri.file(workspaceFolder + folderName + "/" + controller + "/" + action + fileExtension)
-        );
 
+        let fullPath = workspaceFolder + folderName + "/" + controller + "/" + action + fileExtension
+        
+        if (fileExtension.includes("html.erb")) {
+            const isFileExist = await checkFileExists(fullPath)
+            if (!isFileExist) {
+                fullPath = fullPath.replace("html.erb", "turbo_stream.erb")
+            }
+        }
+
+        const isFileExist = await checkFileExists(fullPath)
+        if (isFileExist) {
+            commands.executeCommand(
+                'vscode.open',
+                Uri.file(fullPath)
+            );
+        } else {
+            window.setStatusBarMessage(`Your file(${fullPath}) doesn't exist.`, 1000);    
+        }
     }
     
 }
@@ -328,6 +331,16 @@ const findActionAndController = () => {
     }
     
 }
+
+const checkFileExists = async (filePath: string): Promise<boolean> => {
+    try {
+      await workspace.fs.stat(Uri.file(filePath));
+      return true;
+    } catch {
+      return false;
+    }
+}
+  
 
 const isComponentFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/components/));
 
