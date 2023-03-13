@@ -1,4 +1,4 @@
-import { commands, Uri, window, Range, Selection, Position, workspace, FileType } from 'vscode';
+import { commands, Uri, window, Range, Selection, Position, workspace, FileType, TextEditor } from 'vscode';
 
 const toSnakeCase = (str: string) => str.match(/[A-Z][a-z]+/g)?.map(s => s.toLowerCase()).join("_");
   
@@ -86,55 +86,7 @@ export function activate() {
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-snap-file', () => {
-        const editor = window.activeTextEditor;
-        if (editor) {
-            let activeFileName = editor.document.fileName
-
-            if (activeFileName.includes(".snap")){
-                let originalFileNameMatch = activeFileName.match(/(.*)[_-]/)
-                if (originalFileNameMatch){
-                    activeFileName = activeFileName.replace(/\/__snapshots__/, "")
-                    activeFileName = activeFileName.replace(/\/[^/]*$/, "_spec.rb")
-                }
-
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(activeFileName)
-                );
-                
-            } else if ( activeFileName.match(/spec\/components\/.*_spec\.rb/) ) {
-                const cursorPosition = editor.selection.active
-                const currentLineText = editor.document.lineAt(cursorPosition.line).text
-                if (!currentLineText.match("match_custom_snapshot")) {
-                    window.setStatusBarMessage('Please select a line containing "match_custom_snapshot"', 1000);
-                    return
-                }
-                let currentLineMatch = currentLineText.match(/match_custom_snapshot\(\s*['|"](.*)['|"]\s*\)/)
-                let snapshotName = (currentLineMatch && currentLineMatch[1]) || "default"
-                
-                let activeFileName = editor.document.fileName
-                let activeFileNameMatch = activeFileName.match(/(.*\/)([^\/]*)_spec.rb$/)
-
-                let folderOfSnapshot = ""
-                if (activeFileNameMatch){
-                    folderOfSnapshot = activeFileNameMatch[1] + "__snapshots__/" + activeFileNameMatch[2] + "/"
-                }
-                
-                let selectedSnapshot = ""
-                if (snapshotName !== "" && folderOfSnapshot !== "" ) {
-                    selectedSnapshot = folderOfSnapshot.concat(snapshotName).concat(".snap")
-                } else {
-                    window.setStatusBarMessage("A suitable snapshot file couldn't be found", 1000);
-                    return
-                }
-
-                commands.executeCommand(
-                    'vscode.open',
-                    Uri.file(selectedSnapshot)
-                );
-            }
-            
-        }
+        changeToFileForComponents("spec", ".snap");
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rb-file', () => {
@@ -382,16 +334,57 @@ const isTestFile = (fileName: string) => Boolean(fileName.match(/_spec.rb/));
 
 const isOriginalRailsFile = (fileName: string) => (isViewFile(fileName) || isControllerFile(fileName))
 
+const setSnapName = (editor: TextEditor) => {
+    
+    const cursorPosition = editor.selection.active
+    const currentLineText = editor.document.lineAt(cursorPosition.line).text
+
+    let activeFileName = editor.document.fileName
+    if (activeFileName.includes("__snapshots__")){
+        return (activeFileName.match(/(\w+)\.snap/)?.slice(-1)[0] || "")
+    }
+    if (!currentLineText.match("match_custom_snapshot")) {
+        window.setStatusBarMessage('Please select a line containing "match_custom_snapshot"', 1000);
+        return ""
+    }
+    
+    let currentLineMatch = currentLineText.match(/match_custom_snapshot\(\s*['|"](.*)['|"]\s*\)/)
+    
+    return (currentLineMatch && currentLineMatch[1]) || "default"
+}
+
+const isSnapFile = (str: String) => str.includes(".snap")
+
 const changeToFileForComponents = (folder_name: String, file_extension: String) => {
     
     const editor = window.activeTextEditor;
 
     if (editor) {
-        let activeFileName = editor.document.fileName
-        activeFileName = activeFileName.replace(/\/(app|spec)\//, `/${folder_name}/`)
 
-        const changed_file_name = activeFileName.replace(/\/component(\.html\.erb|\.rb|_spec\.rb)/, `\/component${file_extension}`)
-        
+        let activeFileName = editor.document.fileName
+   
+        activeFileName = activeFileName.replace(/\/(app|spec)\//, `/${folder_name}/`)
+                                        .replace(/\/__snapshots__/, "")
+                                        .replace(/\/\w+\.snap/, "")
+                                        .replace(/(\.html\.erb|\.rb|_spec\.rb)/, "")
+                                        .replace(/\/$/, "")
+
+        let changed_file_name = ""
+
+        if (isSnapFile(file_extension)) {
+            
+            let snapName = ""
+            snapName = setSnapName(editor)
+            if (snapName === "" ) {
+                return
+            }
+
+            changed_file_name = activeFileName.replace(/\/component$/, `/__snapshots__/component/${snapName}${file_extension}`)
+
+        } else {
+            changed_file_name = activeFileName.replace(/\/component$/, `\/component${file_extension}`)
+        }
+
         commands.executeCommand(
             'vscode.open',
             Uri.file(changed_file_name)
