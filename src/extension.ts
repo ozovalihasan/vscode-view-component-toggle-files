@@ -235,7 +235,7 @@ export function activate() {
 
             if ( isComponentFile(activeFileName) ) {
                 
-                changeToFileForComponents("app/views/", ".html.erb")  
+                changeToFileForComponents("app/", ".html.erb")  
                 
             } else if ( isOriginalRailsFile(activeFileName) ) {
                 changeToFileForRailsFiles("app/views", ".html.erb")
