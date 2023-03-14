@@ -80,7 +80,37 @@ export function activate() {
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-snap-file', () => {
-        changeToFileForComponents("spec", ".snap");
+        
+        const editor = window.activeTextEditor;
+
+        if (editor) {
+            let snapName = ""
+    
+            snapName = setSnapName(editor)
+            
+            if (snapName === "" ) {
+                return
+            }
+
+            let activeFileName = editor.document.fileName
+
+            let changed_file_name = ""
+            if ( isComponentFile(activeFileName) ){
+                
+                changed_file_name = activeFileName.replace(/\/component$/, `/__snapshots__/component/${snapName}.snap`)
+                
+            } else if ( isViewFile(activeFileName) ){
+            
+                changed_file_name = activeFileName.replace(/\/[^\/]*$/, `/__snapshots__/${snapName}.snap`)
+
+            } else {
+                window.setStatusBarMessage('The type of your active file couldn"t be defined', 1000);
+                return
+            }
+            
+            openDocument(changed_file_name)
+        
+        }
     });
 
     commands.registerCommand('vscode-view-component-toggle-files.change-to-rb-file', () => {
@@ -241,19 +271,20 @@ const changeToFileForRailsFiles = async (folderName: string, fileExtension: stri
 
         let fullPath = workspaceFolder + folderName + "/" + controller + "/" + action + fileExtension
         
-        if (fileExtension.includes("html.erb")) {
+        if (fileExtension.includes("html")) {
             const isFileExist = await checkFileExists(fullPath)
             
             if (!isFileExist) {
-                fullPath = fullPath.replace("html.erb", "turbo_stream.erb")
+                fullPath = fullPath.replace("html", "turbo_stream")
             }
         }
 
-        if (activeFileName.includes("turbo_stream.erb") && isTestFile(fullPath)){
-            fullPath = fullPath.replace("html.erb", "turbo_stream.erb")
+        if (activeFileName.includes("turbo_stream") && isTestFile(fullPath)){
+            fullPath = fullPath.replace("html", "turbo_stream")
         }
 
         const isFileExist = await checkFileExists(fullPath)
+    
         if (isFileExist) {
             commands.executeCommand(
                 'vscode.open',
@@ -280,6 +311,7 @@ const findActionAndController = () => {
                                                     .replace(".html.erb", "")
                                                     .replace("_controller.rb", "")
                                                     .replace(".rb", "")
+                                                    .replace(".snap", "")
 
         let action = ""
         let controller = ""
@@ -295,6 +327,8 @@ const findActionAndController = () => {
             
         } else if ( isViewFile(activeFileName) ) {
             [controller, action] = folderOfController.match(/app\/views\/(.*)\/(\w+)$/)?.slice(-2) || [ "", "" ]
+        } else if ( isViewSnapFile(activeFileName) ) {
+            [controller, action] = folderOfController.match(/app\/views\/(.*)\/__snapshots__\/([^\/]+)/)?.slice(-2) || [ "", "" ]
         } else {
             window.setStatusBarMessage('There is no an action or a controller.', 1000);    
             return ["", ""]
@@ -324,13 +358,15 @@ const isHTMLViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\
 
 const isTurboStreamViewFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/views\/.*\.turbo_stream\.erb/));
 
+const isViewSnapFile = (fileName: string) => Boolean(fileName.match(/spec\/views\/.*\.snap/));
+
 const isViewFile = (fileName: string) => (isHTMLViewFile(fileName) || isTurboStreamViewFile(fileName))
 
 const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/controllers/));
 
 const isTestFile = (fileName: string) => Boolean(fileName.match(/_spec.rb/));
 
-const isOriginalRailsFile = (fileName: string) => (isViewFile(fileName) || isControllerFile(fileName))
+const isOriginalRailsFile = (fileName: string) : Boolean => (isViewFile(fileName) || isControllerFile(fileName) || isViewSnapFile(fileName))
 
 const setSnapName = (editor: TextEditor) => {
     
@@ -339,7 +375,7 @@ const setSnapName = (editor: TextEditor) => {
 
     let activeFileName = editor.document.fileName
     if (activeFileName.includes("__snapshots__")){
-        return (activeFileName.match(/(\w+)\.snap/)?.slice(-1)[0] || "")
+        return (activeFileName.match(/__snapshots__\/(.*)\.snap$/)?.slice(-1)[0] || "")
     }
     if (!currentLineText.match("match_custom_snapshot")) {
         window.setStatusBarMessage('Please select a line containing "match_custom_snapshot"', 1000);
@@ -347,11 +383,25 @@ const setSnapName = (editor: TextEditor) => {
     }
     
     let currentLineMatch = currentLineText.match(/match_custom_snapshot\(\s*['|"](.*)['|"]\s*\)/)
-    
-    return (currentLineMatch && currentLineMatch[1]) || "default"
+
+    if (isComponentFile(activeFileName)){
+        
+        return (currentLineMatch && currentLineMatch[1]) || "default"
+        
+    } else if (isViewFile(activeFileName)){
+        const [action, viewType] = activeFileName.match(/\/([^\/\.]*)\.(html|turbo_stream)\.erb/)?.slice(-2) || ["", ""]
+
+        const snapName = (currentLineMatch &&  ( "/" + currentLineMatch[1])) || "/default"
+        return action + "/" + viewType + snapName
+    } else {
+        window.setStatusBarMessage('The type of your active file couldn"t be defined', 1000);
+        return ""
+    }
 }
 
 const isSnapFile = (str: String) => str.includes(".snap")
+
+
 
 const changeToFileForComponents = (folder_name: String, file_extension: String) => {
     
@@ -369,19 +419,8 @@ const changeToFileForComponents = (folder_name: String, file_extension: String) 
 
         let changed_file_name = ""
 
-        if (isSnapFile(file_extension)) {
-            
-            let snapName = ""
-            snapName = setSnapName(editor)
-            if (snapName === "" ) {
-                return
-            }
-
-            changed_file_name = activeFileName.replace(/\/component$/, `/__snapshots__/component/${snapName}${file_extension}`)
-
-        } else {
-            changed_file_name = activeFileName.replace(/\/component$/, `\/component${file_extension}`)
-        }
+        
+        changed_file_name = activeFileName.replace(/\/component$/, `\/component${file_extension}`)
 
         commands.executeCommand(
             'vscode.open',
