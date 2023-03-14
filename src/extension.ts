@@ -158,10 +158,14 @@ export function activate() {
     });
 }
 
-const openDocument = async (filePath: string, callback: Function) => {
-    const document = await workspace.openTextDocument(filePath);
-    await window.showTextDocument(document);
-    callback()
+const openDocument = async (filePath: string, callback: Function | null = null) => {
+    try {
+        const document = await workspace.openTextDocument(filePath);
+        await window.showTextDocument(document);
+        if (callback) { callback() }
+    } catch (e) {
+        window.setStatusBarMessage("The file couldn't be opened.", 1000);
+    }
 }
 
 const  moveCursorToAction = (action: string) => {
