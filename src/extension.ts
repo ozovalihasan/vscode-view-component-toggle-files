@@ -189,6 +189,16 @@ export function activate() {
 }
 
 const openDocument = async (filePath: string, callback: Function | null = null) => {
+    const editor = window.activeTextEditor;
+
+    if (editor) {
+        let activeFileName = editor.document.fileName
+
+        if (activeFileName === filePath) {
+            window.setStatusBarMessage("The requested page is already opened.", 1000);
+        }
+    }
+    
     try {
         const document = await workspace.openTextDocument(filePath);
         await window.showTextDocument(document);
