@@ -396,13 +396,13 @@ const setSnapName = (editor: TextEditor) => {
 
     if (isComponentFile(activeFileName)){
         
-        return (currentLineMatch && currentLineMatch[1]) || "default"
+        return "component/" + ((currentLineMatch && currentLineMatch[1]) || "default")
         
     } else if (isViewFile(activeFileName)){
         const [action, viewType] = activeFileName.match(/\/([^\/\.]*)\.(html|turbo_stream)\.erb/)?.slice(-2) || ["", ""]
 
-        const snapName = (currentLineMatch &&  ( "/" + currentLineMatch[1])) || "/default"
-        return action + "/" + viewType + snapName
+        const snapName = (currentLineMatch &&  (currentLineMatch[1])) || "default"
+        return action + "/" + viewType + "/" + snapName
     } else {
         window.setStatusBarMessage('The type of your active file couldn"t be defined', 1000);
         return ""
