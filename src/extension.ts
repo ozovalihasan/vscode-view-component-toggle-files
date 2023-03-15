@@ -96,8 +96,10 @@ export function activate() {
 
             let changed_file_name = ""
             if ( isComponentFile(activeFileName) ){
-                
-                changed_file_name = activeFileName.replace(/\/component$/, `/__snapshots__/component/${snapName}.snap`)
+                const folder = activeFileName.replace(/(.*components.*)\/component.*$/, `$1`)
+                                                .replace(/\/__snapshots__.*$/, "")
+
+                changed_file_name = folder + `/__snapshots__/${snapName}.snap`
                 
             } else if ( isViewFile(activeFileName) ){
             
