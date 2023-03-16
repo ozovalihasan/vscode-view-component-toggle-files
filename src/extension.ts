@@ -246,8 +246,7 @@ const checkingAction = (action: string) => {
     if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action + "\\s*\\n(.*\\n)*" + "\\1end"))) { return false}
     if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action))) { return true}
     
-    return false
-
+    return false;
 }
 
 const getWorkspaceFolder = () => {
@@ -306,9 +305,7 @@ const changeToFileForRailsFiles = async (folderName: string, fileExtension: stri
             window.setStatusBarMessage(`Your file(${fullPath}) doesn't exist.`, 1000);    
         }
     }
-    
 }
-
 
 const findActionAndController = () => {
     const editor = window.activeTextEditor;
@@ -362,7 +359,6 @@ const checkFileExists = async (filePath: string): Promise<boolean> => {
       return false;
     }
 }
-  
 
 const isComponentFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/components/));
 
@@ -382,29 +378,26 @@ const isOriginalRailsFile = (fileName: string) : Boolean => (isViewFile(fileName
 
 const setSnapName = (editor: TextEditor) => {
     
-    const cursorPosition = editor.selection.active
-    const currentLineText = editor.document.lineAt(cursorPosition.line).text
-
     let activeFileName = editor.document.fileName
     if (activeFileName.includes("__snapshots__")){
         return (activeFileName.match(/__snapshots__\/(.*)\.snap$/)?.slice(-1)[0] || "")
     }
-    if (!currentLineText.match("match_custom_snapshot")) {
-        window.setStatusBarMessage('Please select a line containing "match_custom_snapshot"', 1000);
+
+    const partialSnapName = findExpectSnapshotMatch(editor);
+
+    if (!partialSnapName){
+        window.setStatusBarMessage("Please select an 'it' block with 'expect_snapshot_match'", 1000);
         return ""
     }
-    
-    let currentLineMatch = currentLineText.match(/match_custom_snapshot\(\s*['|"](.*)['|"]\s*\)/)
 
     if (isComponentFile(activeFileName)){
         
-        return "component/" + ((currentLineMatch && currentLineMatch[1]) || "default")
+        return "component/" + partialSnapName
         
     } else if (isViewFile(activeFileName)){
         const [action, viewType] = activeFileName.match(/\/([^\/\.]*)\.(html|turbo_stream)\.erb/)?.slice(-2) || ["", ""]
 
-        const snapName = (currentLineMatch &&  (currentLineMatch[1])) || "default"
-        return action + "/" + viewType + "/" + snapName
+        return action + "/" + viewType + "/" + partialSnapName
     } else {
         window.setStatusBarMessage('The type of your active file couldn"t be defined', 1000);
         return ""
@@ -413,7 +406,32 @@ const setSnapName = (editor: TextEditor) => {
 
 const isSnapFile = (str: String) => str.includes(".snap")
 
+const findExpectSnapshotMatch = (editor: TextEditor): string => {
+    let document = editor.document;
+    const lines = document.getText().split('\n');
+    
+    const documentText = document.getText();
+    if (!documentText.includes("expect_snapshot_match")) {
+        return "";
+    }
+    
+    const currentLine = editor.selection.active.line
+    const currentLineIndex = currentLine - 1
 
+    for (const line of lines.slice(currentLineIndex).concat(lines.slice(0, currentLineIndex).reverse())) {
+        if (line.match(/it .* do/)){
+            break;
+        }
+
+        if (line.match(/expect_snapshot_match/)){
+            let currentLineMatch = line.match(/expect_snapshot_match\(\s*['|"](.*)['|"]\s*\)/);
+            
+            return (currentLineMatch && currentLineMatch[1]) || "default";
+        }
+    }
+      
+    return "";
+}
 
 const changeToFileForComponents = (folder_name: String, file_extension: String) => {
     
