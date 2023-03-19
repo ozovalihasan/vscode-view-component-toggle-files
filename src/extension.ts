@@ -417,11 +417,43 @@ const findExpectSnapshotMatch = (editor: TextEditor): string => {
     
     const currentLineIndex = editor.selection.active.line
 
+    if (!isItBlockSelected(lines.slice(0, currentLineIndex + 1).reverse())) {
+        return "";
+    };
+
     return (
         checkLinesForSnapshotMatch(lines.slice(currentLineIndex + 1)) ||
-            checkLinesForSnapshotMatch(lines.slice(0, currentLineIndex).reverse()) ||
+            checkLinesForSnapshotMatch(lines.slice(0, currentLineIndex + 1).reverse()) ||
             ""
     );
+}
+
+const isItBlockSelected = (lines: string[]) => {
+    let spacesBeforeIt: null | string = null
+
+    for (const line of lines) {
+        const itMatch = line.match(/^(\s*)it .* do\s*$/)
+
+        if (itMatch) {
+            spacesBeforeIt = itMatch[1]
+        } 
+    }
+
+    if (!spacesBeforeIt) { 
+        return false
+    }
+    
+    for (const line of lines) {
+        if (line.match(/^\s*it .* do\s*$/)) {
+            return true
+        }
+
+        if (line.match(new RegExp(`^${spacesBeforeIt}end\\s*$`))) {
+            return false
+        } 
+    }
+
+    true
 }
 
 const checkLinesForSnapshotMatch = (lines: string[]): string => {
