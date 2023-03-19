@@ -415,22 +415,29 @@ const findExpectSnapshotMatch = (editor: TextEditor): string => {
         return "";
     }
     
-    const currentLine = editor.selection.active.line
-    const currentLineIndex = currentLine - 1
+    const currentLineIndex = editor.selection.active.line
 
-    for (const line of lines.slice(currentLineIndex).concat(lines.slice(0, currentLineIndex).reverse())) {
-        if (line.match(/it .* do/)){
-            break;
-        }
+    return (
+        checkLinesForSnapshotMatch(lines.slice(currentLineIndex)) ||
+            checkLinesForSnapshotMatch(lines.slice(0, currentLineIndex - 1).reverse()) ||
+            ""
+    );
+}
 
+const checkLinesForSnapshotMatch = (lines: string[]): string => {
+    for (const line of lines) {
         if (line.match(/expect_snapshot_match/)){
             let currentLineMatch = line.match(/expect_snapshot_match\(\s*['|"](.*)['|"]\s*\)/);
             
             return (currentLineMatch && currentLineMatch[1]) || "default";
         }
+
+        if (line.match(/it .* do/)){
+            break;
+        }
     }
-      
-    return "";
+
+    return ""
 }
 
 const changeToFileForComponents = (folder_name: String, file_extension: String) => {
