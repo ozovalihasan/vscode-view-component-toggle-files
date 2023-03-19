@@ -418,8 +418,8 @@ const findExpectSnapshotMatch = (editor: TextEditor): string => {
     const currentLineIndex = editor.selection.active.line
 
     return (
-        checkLinesForSnapshotMatch(lines.slice(currentLineIndex)) ||
-            checkLinesForSnapshotMatch(lines.slice(0, currentLineIndex - 1).reverse()) ||
+        checkLinesForSnapshotMatch(lines.slice(currentLineIndex + 1)) ||
+            checkLinesForSnapshotMatch(lines.slice(0, currentLineIndex).reverse()) ||
             ""
     );
 }
@@ -432,7 +432,7 @@ const checkLinesForSnapshotMatch = (lines: string[]): string => {
             return (currentLineMatch && currentLineMatch[1]) || "default";
         }
 
-        if (line.match(/it .* do/)){
+        if (line.match(/\s*it .* do/)){
             break;
         }
     }
