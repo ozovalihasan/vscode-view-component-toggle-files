@@ -132,6 +132,15 @@ export function activate() {
                 const workspaceFolder = getWorkspaceFolder()
 
                 openDocument(workspaceFolder + "app/controllers/" + controller + "_controller.rb", () => moveCursorToAction(action))
+
+            } else if ( isModelFile(activeFileName) ) {
+                
+                changeToFileForModelFiles(editor, "app/models", ".rb")    
+                
+            } else {
+                
+                window.setStatusBarMessage("Your file is not suitable to toggle", 1000);
+
             }
         }
     });
@@ -150,10 +159,13 @@ export function activate() {
 
                 changeToFileForViewRelatedFiles("spec/views", ".html.erb_spec.rb")    
                 
+            } else if ( isModelFile(activeFileName) ) {
+                
+                changeToFileForModelFiles(editor, "spec/models", "_spec.rb")    
                 
             } else {
                 
-                window.setStatusBarMessage("Your file is not suitable to toggle", 1000);
+                window.setStatusBarMessage("Your file isn't suitable to be opened with an file ending '_spec.rb' ", 1000);
 
             }
         }
@@ -259,7 +271,7 @@ const getWorkspaceFolder = () => {
 
     if (editor) {
         let activeFileName = editor.document.fileName
-        const workspaceFolder = activeFileName.match(/(.*\/)(app|spec)\/(views|controllers)/)?.slice(1)[0] || ""
+        const workspaceFolder = activeFileName.match(/(.*\/)(app|spec)\/(models|views|controllers)/)?.slice(1)[0] || ""
 
         if (workspaceFolder === "") {
             window.setStatusBarMessage("There is no a workspace folder", 1000);
@@ -272,6 +284,24 @@ const getWorkspaceFolder = () => {
     }
 }
 
+const findModelName = (editor: TextEditor) => {
+    const activeFileName = editor.document.fileName
+
+    const modelName = activeFileName.replace("_spec.rb", "")
+                                    .replace(".rb", "")
+                                    .replace(/.*\/(spec|app)\/models\//, "")
+                            
+                                
+    return modelName
+}
+
+const changeToFileForModelFiles = (editor: TextEditor, folderName: string, fileExtension: string) => {
+    const modelName = findModelName(editor)
+
+    const workspaceFolder = getWorkspaceFolder()
+
+    openDocument(workspaceFolder + folderName + "/" + modelName + fileExtension)
+}
 
 const changeToFileForViewRelatedFiles = async (folderName: string, fileExtension: string) => {
     let [controller, action] = findActionAndController()
@@ -377,6 +407,8 @@ const isViewSnapFile = (fileName: string) => Boolean(fileName.match(/spec\/views
 const isViewFile = (fileName: string) => (isHTMLViewFile(fileName) || isTurboStreamViewFile(fileName))
 
 const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/controllers/));
+
+const isModelFile = (fileName: string) => Boolean(fileName.match(/(app|spec)\/models/));
 
 const isTestFile = (fileName: string) => Boolean(fileName.match(/_spec.rb/));
 
