@@ -125,7 +125,7 @@ export function activate() {
 
                 changeToFileForComponents("app", ".rb")
                 
-            } else if ( isOriginalRailsFile(activeFileName) ) {
+            } else if ( isViewRelatedFile(activeFileName) ) {
                 
                 let [controller, action] = findActionAndController()
 
@@ -146,9 +146,10 @@ export function activate() {
                 
                 changeToFileForComponents("spec", "_spec.rb")  
                 
-            } else if ( isOriginalRailsFile(activeFileName) ) {
+            } else if ( isViewRelatedFile(activeFileName) ) {
 
-                changeToFileForRailsFiles("spec/views", ".html.erb_spec.rb")    
+                changeToFileForViewRelatedFiles("spec/views", ".html.erb_spec.rb")    
+                
                 
             } else {
                 
@@ -169,8 +170,12 @@ export function activate() {
                 
                 changeToFileForComponents("app/", ".html.erb")  
                 
-            } else if ( isOriginalRailsFile(activeFileName) ) {
-                changeToFileForRailsFiles("app/views", ".html.erb")
+            } else if ( isViewRelatedFile(activeFileName) ) {
+
+                changeToFileForViewRelatedFiles("app/views", ".html.erb")
+                
+            } else {
+                window.setStatusBarMessage("Your file isn't suitable to be opened with an file extension 'html.erb' ", 1000);
             }
         }
     });
@@ -181,8 +186,8 @@ export function activate() {
         if (editor) {
             let activeFileName = editor.document.fileName
 
-            if ( isOriginalRailsFile(activeFileName) ) {
-                changeToFileForRailsFiles("app/views", ".turbo_stream.erb")
+            if ( isViewRelatedFile(activeFileName) ) {
+                changeToFileForViewRelatedFiles("app/views", ".turbo_stream.erb")
             } else {
                 window.setStatusBarMessage("There is no any file with 'turbo_stream' to open.", 1000);
             }
@@ -267,7 +272,8 @@ const getWorkspaceFolder = () => {
     }
 }
 
-const changeToFileForRailsFiles = async (folderName: string, fileExtension: string) => {
+
+const changeToFileForViewRelatedFiles = async (folderName: string, fileExtension: string) => {
     let [controller, action] = findActionAndController()
     
     let activeFileName = ""
@@ -374,7 +380,7 @@ const isControllerFile = (fileName: string) => Boolean(fileName.match(/app\/cont
 
 const isTestFile = (fileName: string) => Boolean(fileName.match(/_spec.rb/));
 
-const isOriginalRailsFile = (fileName: string) : Boolean => (isViewFile(fileName) || isControllerFile(fileName) || isViewSnapFile(fileName))
+const isViewRelatedFile = (fileName: string) : Boolean => (isViewFile(fileName) || isControllerFile(fileName) || isViewSnapFile(fileName))
 
 const setSnapName = (editor: TextEditor) => {
     
