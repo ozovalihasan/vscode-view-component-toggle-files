@@ -260,8 +260,8 @@ const checkingAction = (action: string) => {
     const cursorPosition = editor.selection.active; 
     const fileTextToCursor = editor.document.getText(new Range(0, 0, cursorPosition.line, cursorPosition.character));
 
-    if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action + "\\s*\\n(.*\\n)*" + "\\1end"))) { return false}
-    if (fileTextToCursor.match(new RegExp("(\\s\*)def\\s+" + action))) { return true}
+    if (fileTextToCursor.match(new RegExp("(\\s*)def\\s+" + action + "\\s*\\n(.*\\n)*" + "\\1end"))) { return false}
+    if (fileTextToCursor.match(new RegExp("(\\s*)def\\s+" + action))) { return true}
     
     return false;
 }
